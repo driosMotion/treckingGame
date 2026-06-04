@@ -27,166 +27,75 @@ class BootScene extends Phaser.Scene {
     this.scene.start('Menu');
   }
 
-  /* Pixel-art climber: brown hair, blue shirt, red pants */
+  /* Pixel-art climber: graphics-based generation (works with WebGL) */
   generateClimber() {
-    const gw = this.make.graphics({ add: false });
     const F = 32, Hf = 48;
-    const colors = {
-      skin: 0xf5d0a9,  hair: 0x6b3a2a, shirt: 0x3366cc,
-      pants: 0xcc3333, shoe: 0x4a2800, eye: 0x222222,
-      outline: 0x222222,
-    };
 
-    function px(g, x, y, color) { g.fillStyle(color); g.fillRect(x, y, 1, 1); }
-
-    // Frame 0: idle (stand)
-    // Frame 1: run 1 (right leg forward)
-    // Frame 2: run 2 (left leg forward)
-    // Frame 3: jump (arms up)
-
-    const frames = [
-      // frame 0 — idle
-      [
-        // hair (3 rows)
-        '..xxxxx....', '..xxxxxxx..', '..xxxxxxxx.',
-        // face
-        '.xxxxxxxxx.', '.xx.x.xxxx.', '.xxxxxxxxx.',
-        // body
-        '.xxxxxxxxx.', '.xxxxxxxxx.', '..xxxxxxx..',
-        // arms + belt
-        'xxxxxxxxxxx', 'xxxxxxxxxxx', '..xxxxxxx..',
-        // legs
-        '..x...x...', '..xx.xx...', '..xx.xx...',
-        // shoes
-        '..xxx.xxx.',
-      ],
-      // frame 1 — run right leg forward
-      [
-        '..xxxxx....', '..xxxxxxx..', '..xxxxxxxx.',
-        '.xxxxxxxxx.', '.xx.x.xxxx.', '.xxxxxxxxx.',
-        '.xxxxxxxxx.', '.xxxxxxxxx.', '..xxxxxxx..',
-        'xxxxxxxxxxx', 'xxxxxxxxxxx', '..xxxxxxx..',
-        '..x...x..', '..xx.xx..', '..xx.xx..',
-        '..xxx..xxx',
-      ],
-      // frame 2 — run left leg forward
-      [
-        '..xxxxx....', '..xxxxxxx..', '..xxxxxxxx.',
-        '.xxxxxxxxx.', '.xx.x.xxxx.', '.xxxxxxxxx.',
-        '.xxxxxxxxx.', '.xxxxxxxxx.', '..xxxxxxx..',
-        'xxxxxxxxxxx', 'xxxxxxxxxxx', '..xxxxxxx..',
-        '..x...x..', '...xx.xx.', '...xx.xx.',
-        '..xxx..xxx',
-      ],
-      // frame 3 — jump (arms up)
-      [
-        '..xxxxx....', '..xxxxxxx..', '..xxxxxxxx.',
-        '.xxxxxxxxx.', '.xx.x.xxxx.', '.xxxxxxxxx.',
-        '.xxxxxxxxx.', '.xxxxxxxxx.', '..xxxxxxx..',
-        'xxxxxxxxxxx', '..xxxxxxx..', '..xxxxxxx..',
-        '..x...x..', '..xx.xx..', '..xx.xx..',
-        '..xxx.xxx.',
-      ],
-    ];
-
-    // Actually let me just draw proper pixel art programmatically
-
-    const texData = [];
     for (let f = 0; f < 4; f++) {
-      gw.clear();
-      this.drawClimberFrame(gw, f, colors);
-      gw.generateTexture('climber_' + f, F, Hf);
-      texData.push(gw);
-    }
+      const g = this.make.graphics({ add: false });
 
-    // Build spritesheet manually: draw all frames into one canvas
-    const canvas = this.textures.createCanvas('climber_sheet', F * 4, Hf);
-    const ctx = canvas.context;
-    for (let f = 0; f < 4; f++) {
-      const src = this.textures.get('climber_' + f).getSourceImage();
-      ctx.drawImage(src, f * F, 0);
-    }
-    canvas.refresh();
+      // Beanie (red)
+      g.fillStyle(0xcc4422);
+      g.fillRect(8, 1, 16, 8);
 
-    // Add spritesheet frames
-    this.textures.get('climber_sheet').add(0, 0, 0, 0, F, Hf);
-    this.textures.get('climber_sheet').add(1, 0, F, 0, F, Hf);
-    this.textures.get('climber_sheet').add(2, 0, F * 2, 0, F, Hf);
-    this.textures.get('climber_sheet').add(3, 0, F * 3, 0, F, Hf);
+      // Head/face (skin)
+      g.fillStyle(0xf5d0a9);
+      g.fillRect(10, 9, 12, 9);
 
-    // Cleanup temp textures
-    for (let f = 0; f < 4; f++) this.textures.remove('climber_' + f);
-  }
+      // Eyes (black dots)
+      g.fillStyle(0x222222);
+      g.fillRect(12, 12, 2, 2);
+      g.fillRect(18, 12, 2, 2);
 
-  drawClimberFrame(g, frame, c) {
-    g.fillStyle(c.outline);
+      // Body/jacket (blue)
+      g.fillStyle(0x3366cc);
+      g.fillRect(8, 18, 16, 12);
 
-    // Helper to draw a row at given y
-    const rows = [
-      // y0: hair top
-      { y: 0,  pat: '..XXXXX....', col: c.hair },
-      { y: 1,  pat: '..XXXXXXXX..', col: c.hair },
-      { y: 2,  pat: '..XXXXXXXXX.', col: c.hair },
-      // y3-6: face
-      { y: 3,  pat: '.XXXXXXXXX.', col: c.skin },
-      { y: 4,  pat: '.XX.X.XXXX.', col: c.skin }, // eyes
-      { y: 5,  pat: '.XXXXXXXXX.', col: c.skin },
-      { y: 6,  pat: '.XXXXXXXXX.', col: c.skin },
-      // y7-9: shirt
-      { y: 7,  pat: '.XXXXXXXXX.', col: c.shirt },
-      { y: 8,  pat: 'XXXXXXXXXXX', col: c.shirt },
-      { y: 9,  pat: 'XXXXXXXXXXX', col: c.shirt },
-      // y10: belt
-      { y: 10, pat: '..XXXXXXX..', col: c.pants },
-      // y11-13: legs (varies by frame)
-      { y: 11, pat: '..X...X..', col: c.pants },
-      { y: 12, pat: '..XX.XX..', col: c.pants },
-      { y: 13, pat: '..XX.XX..', col: c.pants },
-      // y14: shoes
-      { y: 14, pat: '..XXX.XXX.', col: c.shoe },
-    ];
+      // Arms (blue)
+      g.fillRect(4, 19, 4, 10);
+      g.fillRect(24, 19, 4, 10);
 
-    // Override legs based on frame
-    let lRows = rows.slice();
-    if (frame === 1) { // run 1 — right forward
-      lRows[11] = { y: 11, pat: '..X...X..', col: c.pants };
-      lRows[12] = { y: 12, pat: '..XX.XX..', col: c.pants };
-      lRows[13] = { y: 13, pat: '..XX.XX..', col: c.pants };
-      lRows[14] = { y: 14, pat: '..XXX..XXX', col: c.shoe };
-    } else if (frame === 2) { // run 2 — left forward
-      lRows[11] = { y: 11, pat: '..X...X..', col: c.pants };
-      lRows[12] = { y: 12, pat: '...XX.XX.', col: c.pants };
-      lRows[13] = { y: 13, pat: '...XX.XX.', col: c.pants };
-      lRows[14] = { y: 14, pat: '..XXX..XXX', col: c.shoe };
-    } else if (frame === 3) { // jump — arms up
-      lRows[8]  = { y: 8,  pat: 'XXXXXXXXXXX', col: c.shirt };
-      lRows[9]  = { y: 9,  pat: '..XXXXXXX..', col: c.shirt };
-      lRows[11] = { y: 11, pat: '..X...X..', col: c.pants };
-      lRows[12] = { y: 12, pat: '..XX.XX..', col: c.pants };
-      lRows[13] = { y: 13, pat: '..XX.XX..', col: c.pants };
-      lRows[14] = { y: 14, pat: '..XXX.XXX.', col: c.shoe };
-    }
-
-    for (const row of lRows) {
-      for (let x = 0; x < row.pat.length; x++) {
-        if (row.pat[x] !== '.') {
-          g.fillStyle(row.col);
-          g.fillRect(x + 10, row.y, 1, 1);
-          // outline
-          g.fillStyle(c.outline);
-        }
+      // Pants (red) - vary by frame
+      g.fillStyle(0xcc3333);
+      if (f === 0) {
+        g.fillRect(10, 30, 5, 12);
+        g.fillRect(17, 30, 5, 12);
+      } else if (f === 1) {
+        g.fillRect(8, 30, 5, 10);
+        g.fillRect(19, 30, 5, 14);
+      } else if (f === 2) {
+        g.fillRect(9, 30, 5, 14);
+        g.fillRect(18, 30, 5, 10);
+      } else {
+        g.fillRect(9, 30, 5, 6);
+        g.fillRect(10, 36, 3, 6);
+        g.fillRect(18, 30, 5, 6);
+        g.fillRect(19, 36, 3, 6);
       }
-    }
-    // Draw eyes specifically (black dots)
-    if (frame < 3) {
-      g.fillStyle(c.eye);
-      g.fillRect(13, 4, 1, 1);
-      g.fillRect(18, 4, 1, 1);
-    } else {
-      // Jump frame eyes
-      g.fillStyle(c.eye);
-      g.fillRect(13, 4, 1, 1);
-      g.fillRect(18, 4, 1, 1);
+
+      // Boots (brown)
+      g.fillStyle(0x4a2800);
+      if (f === 0) {
+        g.fillRect(9, 42, 6, 4);
+        g.fillRect(17, 42, 6, 4);
+      } else if (f === 1) {
+        g.fillRect(7, 40, 6, 4);
+        g.fillRect(18, 44, 6, 4);
+      } else if (f === 2) {
+        g.fillRect(8, 44, 6, 4);
+        g.fillRect(17, 40, 6, 4);
+      } else {
+        g.fillRect(9, 40, 6, 4);
+        g.fillRect(17, 40, 6, 4);
+      }
+
+      // Dark outline
+      g.lineStyle(1, 0x222222, 1);
+      g.strokeRect(1, 1, F - 2, Hf - 2);
+
+      // Generate texture (THIS works in WebGL, unlike createCanvas)
+      g.generateTexture('climber_' + f, F, Hf);
+      g.destroy();
     }
   }
 
@@ -407,47 +316,50 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#5c94fc');
 
     // ── World bounds ──
-    const WORLD_W = 6400;
-    const WORLD_H = 480;
-    this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
+    this.worldW = 6400;
+    this.worldH = 480;
+    this.physics.world.setBounds(0, 0, this.worldW, this.worldH);
 
-    // ── Parallax backgrounds ──
-    this.bgSky = this.add.tileSprite(0, 0, W, H, 'bg_sky').setOrigin(0, 0).setScrollFactor(0);
+    // ── Parallax backgrounds (lowest depths so player renders on top) ──
+    // Sky as plain image (no tiling needed)
+    this.bgSky = this.add.image(W/2, H/2, 'bg_sky')
+      .setScrollFactor(0).setDepth(-20);
     this.bgFar = this.add.tileSprite(0, 0, W, H, 'bg_mountains_far')
-      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.6);
+      .setOrigin(0, 0).setScrollFactor(0).setAlpha(0.6).setDepth(-10);
     this.bgNear = this.add.tileSprite(0, 0, W, H, 'bg_mountains_near')
-      .setOrigin(0, 0).setScrollFactor(0);
+      .setOrigin(0, 0).setScrollFactor(0).setDepth(-5);
 
     // ── Build level from tilemap data ──
     this.platforms = this.physics.add.staticGroup();
     this.coins = this.physics.add.staticGroup();
-    this.buildLevel(WORLD_W);
+    this.buildLevel(this.worldW);
 
     // ── Player ──
-    this.player = this.physics.add.sprite(64, 200, 'climber_sheet', 0);
+    this.player = this.physics.add.sprite(64, 200, 'climber_0');
     this.player.setSize(20, 44);
     this.player.setOffset(6, 4);
     this.player.setBounce(0);
     this.player.setCollideWorldBounds(true);
     this.player.body.setMaxVelocity(120, 400);
     this.player.body.setGravityY(800);
+    this.player.setDepth(50);
 
-    // Animations
+    // Animations (individual textures per frame)
     this.anims.create({
-      key: 'idle', frames: [{ key: 'climber_sheet', frame: 0 }],
+      key: 'idle', frames: [{ key: 'climber_0' }],
       frameRate: 1, repeat: -1
     });
     this.anims.create({
       key: 'run', frames: [
-        { key: 'climber_sheet', frame: 1 },
-        { key: 'climber_sheet', frame: 0 },
-        { key: 'climber_sheet', frame: 2 },
-        { key: 'climber_sheet', frame: 0 },
+        { key: 'climber_1' },
+        { key: 'climber_0' },
+        { key: 'climber_2' },
+        { key: 'climber_0' },
       ],
       frameRate: 8, repeat: -1
     });
     this.anims.create({
-      key: 'jump', frames: [{ key: 'climber_sheet', frame: 3 }],
+      key: 'jump', frames: [{ key: 'climber_3' }],
       frameRate: 1, repeat: 0
     });
 
@@ -456,8 +368,8 @@ class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
 
     // ── Camera ──
-    this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
-    this.cameras.main.startFollow(this.player, true, 0.1, 0);
+    this.cameras.main.setBounds(0, 0, this.worldW, this.worldH);
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
     // ── Input ──
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -474,13 +386,13 @@ class GameScene extends Phaser.Scene {
     }).setScrollFactor(0).setDepth(100);
 
     // ── Game over / win flag ──
-    this.finishLine = this.add.rectangle(WORLD_W - 80, 400, 20, 120, 0xffdd00)
+    this.finishLine = this.add.rectangle(this.worldW - 80, 400, 20, 120, 0xffdd00)
       .setOrigin(0.5, 0.5);
     this.physics.add.existing(this.finishLine, true);
     this.physics.add.overlap(this.player, this.finishLine, this.winLevel, null, this);
 
     // Win flag text
-    this.add.text(WORLD_W - 80, 340, '🏁', {
+    this.add.text(this.worldW - 80, 340, '🏁', {
       fontSize: '16px'
     }).setOrigin(0.5);
   }
@@ -681,14 +593,13 @@ class GameScene extends Phaser.Scene {
       this.player.play('idle', true);
     }
 
-    // ── Parallax scrolling ──
+    // ── Parallax scrolling (mountains only, sky is static) ──
     const camX = this.cameras.main.scrollX;
-    this.bgSky.tilePositionX = camX * 0.05;
     this.bgFar.tilePositionX = camX * 0.15;
     this.bgNear.tilePositionX = camX * 0.3;
 
     // ── Fall death ──
-    if (this.player.y > WORLD_H + 50) {
+    if (this.player.y > this.worldH + 50) {
       this.scene.restart();
     }
   }
@@ -720,4 +631,4 @@ const config = {
   scene: [BootScene, MenuScene, GameScene],
 };
 
-const game = new Phaser.Game(config);
+var game = new Phaser.Game(config);
