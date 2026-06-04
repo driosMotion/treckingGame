@@ -6,7 +6,9 @@ Inspired by Super Mario Bros 3 — tight platforming, pixel art, parallax backgr
 
 ## 🎮 Play
 
-Open `index.html` in a browser via any local server:
+**🌐 https://driosmotion.github.io/treckingGame/**
+
+Or run locally:
 
 ```bash
 cd treckingGame && python3 -m http.server 8080
